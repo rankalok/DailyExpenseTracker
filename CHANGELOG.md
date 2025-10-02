@@ -5,6 +5,87 @@ All notable changes to the Daily Expense Tracker project will be documented in t
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2025-10-02
+
+### Added
+- **Settings Management Page**
+  - Added new "⚙️ Settings" tab to main navigation
+  - **Label Management Section**:
+    - Add new expense categories with real-time validation
+    - Edit existing labels with inline editing (prompt-based)
+    - Delete labels with confirmation dialogs
+    - Grid-based display with card layout for easy management
+  - **Payment Options Management Section**:
+    - Add new payment methods with duplicate prevention
+    - Edit existing payment options with validation
+    - Delete obsolete payment methods with confirmation
+    - Organized card layout with hover effects
+  - **Smart Features**:
+    - Uppercase normalization for consistency
+    - Enter key support for quick additions
+    - Real-time form suggestion updates
+    - Duplicate prevention with user feedback
+  - **Reset Options**:
+    - "Reset Labels to Default" button to restore original categories
+    - "Reset Payment Options to Default" button to restore original methods
+    - Confirmation dialogs for destructive operations
+  - **Responsive Design**: Perfect mobile and desktop experience
+
+- **Enhanced File Import/Export**
+  - **Improved CSV Parsing**:
+    - Fixed date parsing for dd-MMM-YYYY format (e.g., "01-Oct-2025")
+    - Proper handling of quoted fields in CSV files
+    - Enhanced field validation and error reporting
+    - Added missing `generateId()` method for imported expenses
+  - **Smart TXT File Processing**:
+    - Automatic detection of CSV format within TXT files
+    - Dual-format support: traditional TXT and CSV-formatted TXT
+    - Backward compatibility with existing TXT export format
+  - **Advanced Date Handling**:
+    - Prioritized dd-MMM-YYYY parsing for CSV imports
+    - Fixed timezone issues in date conversion
+    - ISO format validation and normalization
+    - Consistent date formatting across all operations
+
+### Fixed
+- **Date Parsing Issues**
+  - Fixed incorrect date conversion where "01-Oct-2025" was being parsed incorrectly
+  - Resolved timezone offset problems in date creation
+  - Proper ISO format conversion (dd-MMM-YYYY → YYYY-MM-DD)
+  - Consistent date handling across import and display functions
+
+- **CSV Import Problems**
+  - Fixed missing `generateId()` method that caused import failures
+  - Corrected CSV field parsing for quoted descriptions
+  - Improved error handling for malformed CSV data
+  - Enhanced duplicate detection during import process
+
+- **TXT File Compatibility**
+  - Added CSV format detection for TXT files with identical content
+  - Maintained support for traditional numbered TXT format
+  - Fixed parsing inconsistencies between file formats
+  - Improved error messages for unsupported formats
+
+### Improved
+- **User Experience Enhancements**
+  - Settings page with intuitive management interface
+  - Real-time validation feedback for all operations
+  - Consistent button styling and hover effects
+  - Mobile-responsive design for settings management
+  - Keyboard shortcuts (Enter key) for common actions
+
+- **Data Management**
+  - Automatic label and payment option synchronization
+  - Improved localStorage management for settings
+  - Enhanced data validation across all operations
+  - Consistent uppercase normalization for categories
+
+- **Code Quality**
+  - Modular settings management functions
+  - Improved error handling and user feedback
+  - Better separation of concerns in codebase
+  - Enhanced documentation and code comments
+
 ## [1.1.0] - 2025-10-02
 
 ### Added

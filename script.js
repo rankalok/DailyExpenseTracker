@@ -83,6 +83,7 @@ class ExpenseTracker {
         // Tab navigation
         document.getElementById('addExpenseTab').addEventListener('click', () => this.switchToPage('addExpense'));
         document.getElementById('listExpensesTab').addEventListener('click', () => this.switchToPage('listExpenses'));
+        document.getElementById('settingsTab').addEventListener('click', () => this.switchToPage('settings'));
 
         // Form submission
         document.getElementById('expenseForm').addEventListener('submit', (e) => this.handleFormSubmit(e));
@@ -119,6 +120,20 @@ class ExpenseTracker {
         document.getElementById('downloadTXT').addEventListener('click', () => this.downloadTXT());
         document.getElementById('loadFile').addEventListener('click', () => this.triggerFileInput());
         document.getElementById('fileInput').addEventListener('change', (e) => this.handleFileLoad(e));
+
+        // Settings event listeners
+        document.getElementById('addLabel').addEventListener('click', () => this.addNewLabel());
+        document.getElementById('addPaymentOption').addEventListener('click', () => this.addNewPaymentOption());
+        document.getElementById('resetLabels').addEventListener('click', () => this.resetLabelsToDefault());
+        document.getElementById('resetPaymentOptions').addEventListener('click', () => this.resetPaymentOptionsToDefault());
+        
+        // Enter key support for adding new items
+        document.getElementById('newLabel').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') this.addNewLabel();
+        });
+        document.getElementById('newPaymentOption').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') this.addNewPaymentOption();
+        });
     }
 
     // Switch between pages
@@ -135,6 +150,10 @@ class ExpenseTracker {
             document.getElementById('listExpensesTab').classList.add('active');
             this.loadCurrentMonthExpenses();
             this.displayExpenses();
+        } else if (page === 'settings') {
+            document.getElementById('settingsPage').classList.add('active');
+            document.getElementById('settingsTab').classList.add('active');
+            this.loadSettingsPage();
         }
     }
 
@@ -740,9 +759,21 @@ class ExpenseTracker {
 
     // Parse TXT content
     parseTXT(content) {
+        // First, check if this TXT file is actually in CSV format
+        const lines = content.trim().split('\n');
+        if (lines.length >= 2) {
+            const firstLine = lines[0].trim();
+            // Check if first line looks like CSV header
+            if (firstLine.toLowerCase().includes('date') && firstLine.includes(',') && 
+                (firstLine.toLowerCase().includes('amount') || firstLine.toLowerCase().includes('description'))) {
+                // This TXT file is actually in CSV format, use CSV parser
+                console.log('TXT file detected as CSV format, using CSV parser');
+                return this.parseCSV(content);
+            }
+        }
+
+        // Parse as traditional TXT format
         const expenses = [];
-        const lines = content.split('\n');
-        
         let currentExpense = {};
         let isParsingExpenses = false;
 
@@ -855,13 +886,7 @@ class ExpenseTracker {
 
     // Parse date from various formats
     parseDate(dateStr) {
-        // Try ISO format first (YYYY-MM-DD)
-        let date = new Date(dateStr);
-        if (!isNaN(date.getTime())) {
-            return dateStr;
-        }
-
-        // Try dd-MMM-YYYY format (02-Oct-2025)
+        // Try dd-MMM-YYYY format first (02-Oct-2025) - this is the expected format for CSV
         const ddMmmYyyy = dateStr.match(/^(\d{1,2})-([A-Za-z]{3})-(\d{4})$/);
         if (ddMmmYyyy) {
             const [, day, month, year] = ddMmmYyyy;
@@ -869,10 +894,19 @@ class ExpenseTracker {
                               'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
             const monthIndex = monthNames.indexOf(month.toLowerCase());
             if (monthIndex !== -1) {
-                date = new Date(parseInt(year), monthIndex, parseInt(day));
-                if (!isNaN(date.getTime())) {
-                    return date.toISOString().split('T')[0];
-                }
+                // Create date in YYYY-MM-DD format to avoid timezone issues
+                const paddedMonth = (monthIndex + 1).toString().padStart(2, '0');
+                const paddedDay = day.padStart(2, '0');
+                return `${year}-${paddedMonth}-${paddedDay}`;
+            }
+        }
+
+        // Try ISO format (YYYY-MM-DD) - just validate and return as is
+        const isoFormat = dateStr.match(/^\d{4}-\d{2}-\d{2}$/);
+        if (isoFormat) {
+            const date = new Date(dateStr + 'T12:00:00Z'); // Use noon UTC to avoid timezone issues
+            if (!isNaN(date.getTime())) {
+                return dateStr; // Return original ISO format
             }
         }
 
@@ -942,6 +976,231 @@ class ExpenseTracker {
         localStorage.setItem('paymentOptions', JSON.stringify(this.paymentOptions));
         this.updateLabelSuggestions();
         this.updatePaymentSuggestions();
+    }
+
+    // Settings Page Methods
+    loadSettingsPage() {
+        this.displayLabelsInSettings();
+        this.displayPaymentOptionsInSettings();
+    }
+
+    // Display labels in settings page
+    displayLabelsInSettings() {
+        const container = document.getElementById('labelsList');
+        container.innerHTML = '';
+
+        if (this.labels.length === 0) {
+            container.innerHTML = '<p class="empty-message">No labels found. Add one below!</p>';
+            return;
+        }
+
+        this.labels.forEach((label, index) => {
+            const labelItem = document.createElement('div');
+            labelItem.className = 'settings-item';
+            labelItem.innerHTML = `
+                <span class="item-text">${label}</span>
+                <div class="item-actions">
+                    <button class="btn-small btn-edit" onclick="expenseTracker.editLabel(${index}, '${label}')">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="btn-small btn-delete" onclick="expenseTracker.deleteLabel(${index})">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            `;
+            container.appendChild(labelItem);
+        });
+    }
+
+    // Display payment options in settings page
+    displayPaymentOptionsInSettings() {
+        const container = document.getElementById('paymentOptionsList');
+        container.innerHTML = '';
+
+        if (this.paymentOptions.length === 0) {
+            container.innerHTML = '<p class="empty-message">No payment options found. Add one below!</p>';
+            return;
+        }
+
+        this.paymentOptions.forEach((option, index) => {
+            const optionItem = document.createElement('div');
+            optionItem.className = 'settings-item';
+            optionItem.innerHTML = `
+                <span class="item-text">${option}</span>
+                <div class="item-actions">
+                    <button class="btn-small btn-edit" onclick="expenseTracker.editPaymentOption(${index}, '${option}')">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="btn-small btn-delete" onclick="expenseTracker.deletePaymentOption(${index})">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            `;
+            container.appendChild(optionItem);
+        });
+    }
+
+    // Add new label
+    addNewLabel() {
+        const input = document.getElementById('newLabel');
+        const newLabel = input.value.trim().toUpperCase();
+
+        if (!newLabel) {
+            this.showMessage('Please enter a label name.', 'error');
+            return;
+        }
+
+        if (this.labels.includes(newLabel)) {
+            this.showMessage('This label already exists.', 'error');
+            return;
+        }
+
+        this.labels.push(newLabel);
+        this.labels.sort();
+        localStorage.setItem('expenseLabels', JSON.stringify(this.labels));
+        this.updateLabelSuggestions();
+        this.displayLabelsInSettings();
+        
+        input.value = '';
+        this.showMessage('Label added successfully!', 'success');
+    }
+
+    // Add new payment option
+    addNewPaymentOption() {
+        const input = document.getElementById('newPaymentOption');
+        const newOption = input.value.trim().toUpperCase();
+
+        if (!newOption) {
+            this.showMessage('Please enter a payment option name.', 'error');
+            return;
+        }
+
+        if (this.paymentOptions.includes(newOption)) {
+            this.showMessage('This payment option already exists.', 'error');
+            return;
+        }
+
+        this.paymentOptions.push(newOption);
+        this.paymentOptions.sort();
+        localStorage.setItem('paymentOptions', JSON.stringify(this.paymentOptions));
+        this.updatePaymentSuggestions();
+        this.displayPaymentOptionsInSettings();
+        
+        input.value = '';
+        this.showMessage('Payment option added successfully!', 'success');
+    }
+
+    // Edit label
+    editLabel(index, currentLabel) {
+        const newLabel = prompt('Edit label:', currentLabel);
+        if (newLabel === null) return; // User cancelled
+
+        const trimmedLabel = newLabel.trim().toUpperCase();
+        if (!trimmedLabel) {
+            this.showMessage('Label cannot be empty.', 'error');
+            return;
+        }
+
+        if (trimmedLabel !== currentLabel && this.labels.includes(trimmedLabel)) {
+            this.showMessage('This label already exists.', 'error');
+            return;
+        }
+
+        this.labels[index] = trimmedLabel;
+        this.labels.sort();
+        localStorage.setItem('expenseLabels', JSON.stringify(this.labels));
+        this.updateLabelSuggestions();
+        this.displayLabelsInSettings();
+        this.showMessage('Label updated successfully!', 'success');
+    }
+
+    // Edit payment option
+    editPaymentOption(index, currentOption) {
+        const newOption = prompt('Edit payment option:', currentOption);
+        if (newOption === null) return; // User cancelled
+
+        const trimmedOption = newOption.trim().toUpperCase();
+        if (!trimmedOption) {
+            this.showMessage('Payment option cannot be empty.', 'error');
+            return;
+        }
+
+        if (trimmedOption !== currentOption && this.paymentOptions.includes(trimmedOption)) {
+            this.showMessage('This payment option already exists.', 'error');
+            return;
+        }
+
+        this.paymentOptions[index] = trimmedOption;
+        this.paymentOptions.sort();
+        localStorage.setItem('paymentOptions', JSON.stringify(this.paymentOptions));
+        this.updatePaymentSuggestions();
+        this.displayPaymentOptionsInSettings();
+        this.showMessage('Payment option updated successfully!', 'success');
+    }
+
+    // Delete label
+    deleteLabel(index) {
+        const labelToDelete = this.labels[index];
+        if (confirm(`Are you sure you want to delete the label "${labelToDelete}"?`)) {
+            this.labels.splice(index, 1);
+            localStorage.setItem('expenseLabels', JSON.stringify(this.labels));
+            this.updateLabelSuggestions();
+            this.displayLabelsInSettings();
+            this.showMessage('Label deleted successfully!', 'success');
+        }
+    }
+
+    // Delete payment option
+    deletePaymentOption(index) {
+        const optionToDelete = this.paymentOptions[index];
+        if (confirm(`Are you sure you want to delete the payment option "${optionToDelete}"?`)) {
+            this.paymentOptions.splice(index, 1);
+            localStorage.setItem('paymentOptions', JSON.stringify(this.paymentOptions));
+            this.updatePaymentSuggestions();
+            this.displayPaymentOptionsInSettings();
+            this.showMessage('Payment option deleted successfully!', 'success');
+        }
+    }
+
+    // Reset labels to default
+    resetLabelsToDefault() {
+        if (confirm('Are you sure you want to reset all labels to default? This will remove any custom labels you have added.')) {
+            const defaultLabels = [
+                'FOOD', 'CLOTHING', 'GROOMING', 'MEDICAL', 'UTILITY', 'VEHICLE-MAINTENANCE',
+                'PETROL', 'MONTHLY', 'CLASSES', 'SCHOOL', 'LEARNING', 'MANDIR', 'BHISI',
+                'JSG', 'OFFICE-LUNCH', 'COMMUTING', 'ONLINE-PAYMENT', 'EATING-OUT',
+                'ENTERTAINMENT', 'TRAVEL/VACATION', 'ELECTRONICS', 'INVESTMENT', 'MISCELLANEOUS'
+            ];
+            
+            this.labels = [...defaultLabels];
+            localStorage.setItem('expenseLabels', JSON.stringify(this.labels));
+            this.updateLabelSuggestions();
+            this.displayLabelsInSettings();
+            this.showMessage('Labels reset to default successfully!', 'success');
+        }
+    }
+
+    // Reset payment options to default
+    resetPaymentOptionsToDefault() {
+        if (confirm('Are you sure you want to reset all payment options to default? This will remove any custom payment options you have added.')) {
+            const defaultPaymentOptions = [
+                'CC-HDFC-RUPAY', 'CC-AXIS-BANK', 'CC-HDFC-REGALIA', 'CC-ICICI-AMAZON-PAY',
+                'UPI-LITE', 'UPI-JUPITER', 'UPI-DCB-NIYO', 'UPI-KOTAK', 'UPI-AXIS',
+                'UPI-SBI', 'UPI-ICICI', 'AMAZON-PAY', 'PLUXEE', 'FASTAG', 'CASH',
+                'BHAVNA', 'PAHAL'
+            ];
+            
+            this.paymentOptions = [...defaultPaymentOptions];
+            localStorage.setItem('paymentOptions', JSON.stringify(this.paymentOptions));
+            this.updatePaymentSuggestions();
+            this.displayPaymentOptionsInSettings();
+            this.showMessage('Payment options reset to default successfully!', 'success');
+        }
+    }
+
+    // Generate unique ID for expenses
+    generateId() {
+        return Date.now().toString() + Math.random().toString(36).substr(2, 9);
     }
 }
 
