@@ -5,6 +5,24 @@ All notable changes to the Daily Expense Tracker project will be documented in t
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.0] - 2025-10-02
+
+### Added
+- **Quick Date Selection Feature**
+  - Added four quick date buttons: "Today", "Yesterday", "Last Month", and "Custom"
+  - **One-click date selection** for faster expense entry
+  - **"Last Month" button** specifically addresses the use case of adding previous month's expenses with minimal clicks
+  - Smart formatted date display (dd-MMM-YYYY) alongside quick buttons
+  - Auto-hide native date picker when using quick selection for cleaner UI
+
+### Enhanced
+- **Improved UX for Historical Expense Entry**
+  - Reduced clicks needed for common date selections from 3+ clicks to 1 click
+  - Streamlined workflow for adding recurring monthly expenses from previous periods
+  - Better visual feedback with active button states
+
+---
+
 ## [1.2.0] - 2025-10-02
 
 ### Added

@@ -132,6 +132,57 @@ nav {
     background: white;
 }
 
+/* Quick Date Selection Buttons */
+.quick-date-buttons {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+}
+
+.btn-quick-date {
+    padding: 6px 12px;
+    border: 2px solid #e2e8f0;
+    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.8);
+    color: #4a5568;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.btn-quick-date:hover {
+    background: #667eea;
+    color: white;
+    border-color: #667eea;
+    transform: translateY(-1px);
+}
+
+.btn-quick-date.active {
+    background: #667eea;
+    color: white;
+    border-color: #667eea;
+}
+
+.date-display {
+    background: rgba(102, 126, 234, 0.1) !important;
+    font-weight: 600;
+    color: #4a5568;
+    cursor: default;
+    margin-top: 5px;
+}
+
+/* Hide native date input when using quick selection */
+.form-group input[type="date"] {
+    display: none;
+}
+
+.form-group input[type="date"].show-custom {
+    display: block;
+    margin-top: 5px;
+}
+
 .format-hint, .char-count {
     display: block;
     font-size: 0.85rem;

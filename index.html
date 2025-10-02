@@ -27,8 +27,18 @@
                         <label for="expenseDate">
                             <i class="fas fa-calendar"></i> Date
                         </label>
+                        
+                        <!-- Quick Date Selection Buttons -->
+                        <div class="quick-date-buttons">
+                            <button type="button" class="btn-quick-date" id="todayBtn">Today</button>
+                            <button type="button" class="btn-quick-date" id="yesterdayBtn">Yesterday</button>
+                            <button type="button" class="btn-quick-date" id="lastMonthBtn">Last Month</button>
+                            <button type="button" class="btn-quick-date" id="customDateBtn">Custom</button>
+                        </div>
+                        
                         <input type="date" id="expenseDate" required>
-                        <small class="format-hint">Format: dd-MMM-YYYY</small>
+                        <input type="text" id="expenseDateDisplay" class="date-display" readonly placeholder="Select date above">
+                        <small class="format-hint">Format: dd-MMM-YYYY | Quick select: Today, Yesterday, or Last Month</small>
                     </div>
 
                     <div class="form-group">

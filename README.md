@@ -5,7 +5,11 @@ A comprehensive web application for tracking daily expenses with smart categoriz
 ## Features
 
 ### 📥 Add Expense Page
-- **Date Input**: Manual entry or calendar dropdown (Format: dd-MMM-YYYY)
+- **Date Input**: Quick date selection buttons + manual calendar (Format: dd-MMM-YYYY)
+  - **Today** button: Current date (1 click)
+  - **Yesterday** button: Previous day (1 click)
+  - **Last Month** button: Same day from previous month (1 click) - Perfect for monthly recurring expenses
+  - **Custom** button: Manual date picker for any specific date
 - **Amount**: Numeric input with 2 decimal places support
 - **Description**: Text input (max 200 characters with live counter)
 - **Label**: Autocomplete suggestions from predefined categories

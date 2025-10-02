@@ -19,6 +19,9 @@ class ExpenseTracker {
         this.loadPaymentOptions();
         this.loadCurrentMonthExpenses();
         this.updateDisplayMonth();
+        
+        // Set default date (today) and activate today button
+        this.setQuickDate('today');
     }
 
     // Load default labels
@@ -76,6 +79,56 @@ class ExpenseTracker {
         const today = new Date();
         const dateString = today.toISOString().split('T')[0];
         document.getElementById('expenseDate').value = dateString;
+        this.updateDateDisplay(dateString);
+    }
+
+    // Update the formatted date display
+    updateDateDisplay(dateValue) {
+        const date = new Date(dateValue + 'T12:00:00Z'); // Avoid timezone issues
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+                       'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        const formattedDate = `${date.getDate().toString().padStart(2, '0')}-${months[date.getMonth()]}-${date.getFullYear()}`;
+        document.getElementById('expenseDateDisplay').value = formattedDate;
+    }
+
+    // Quick date selection methods
+    setQuickDate(type) {
+        const today = new Date();
+        let targetDate;
+        const dateInput = document.getElementById('expenseDate');
+        
+        // Remove active class from all buttons
+        document.querySelectorAll('.btn-quick-date').forEach(btn => btn.classList.remove('active'));
+        
+        switch(type) {
+            case 'today':
+                targetDate = today;
+                document.getElementById('todayBtn').classList.add('active');
+                dateInput.classList.remove('show-custom');
+                break;
+            case 'yesterday':
+                targetDate = new Date(today);
+                targetDate.setDate(targetDate.getDate() - 1);
+                document.getElementById('yesterdayBtn').classList.add('active');
+                dateInput.classList.remove('show-custom');
+                break;
+            case 'lastMonth':
+                targetDate = new Date(today);
+                targetDate.setMonth(targetDate.getMonth() - 1);
+                document.getElementById('lastMonthBtn').classList.add('active');
+                dateInput.classList.remove('show-custom');
+                break;
+            case 'custom':
+                // Show the date input for manual selection
+                document.getElementById('customDateBtn').classList.add('active');
+                dateInput.classList.add('show-custom');
+                dateInput.focus();
+                return;
+        }
+        
+        const dateString = targetDate.toISOString().split('T')[0];
+        dateInput.value = dateString;
+        this.updateDateDisplay(dateString);
     }
 
     // Attach event listeners
@@ -88,6 +141,20 @@ class ExpenseTracker {
         // Form submission
         document.getElementById('expenseForm').addEventListener('submit', (e) => this.handleFormSubmit(e));
         document.getElementById('clearForm').addEventListener('click', () => this.clearForm());
+
+        // Quick date selection buttons
+        document.getElementById('todayBtn').addEventListener('click', () => this.setQuickDate('today'));
+        document.getElementById('yesterdayBtn').addEventListener('click', () => this.setQuickDate('yesterday'));
+        document.getElementById('lastMonthBtn').addEventListener('click', () => this.setQuickDate('lastMonth'));
+        document.getElementById('customDateBtn').addEventListener('click', () => this.setQuickDate('custom'));
+
+        // Date input change handler
+        document.getElementById('expenseDate').addEventListener('change', (e) => {
+            this.updateDateDisplay(e.target.value);
+            // Remove active class from quick date buttons when manually changing date
+            document.querySelectorAll('.btn-quick-date').forEach(btn => btn.classList.remove('active'));
+            document.getElementById('customDateBtn').classList.add('active');
+        });
 
         // Character count for description
         document.getElementById('expenseDescription').addEventListener('input', (e) => this.updateCharCount(e));
@@ -246,7 +313,7 @@ class ExpenseTracker {
     // Clear form
     clearForm() {
         document.getElementById('expenseForm').reset();
-        this.setCurrentDate();
+        this.setQuickDate('today'); // This will set current date and activate today button
         this.updateCharCount({ target: { value: '' } });
     }
 
