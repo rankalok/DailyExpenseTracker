@@ -858,6 +858,7 @@ class ExpenseTracker {
     // Open edit modal
     openEditModal(expenseId) {
         const expense = this.expenses.find(exp => exp.id === expenseId);
+        
         if (!expense) {
             this.showMessage('Expense not found!', 'error');
             return;
@@ -866,8 +867,9 @@ class ExpenseTracker {
         // Store the expense ID being edited
         this.editingExpenseId = expenseId;
 
-        // Populate form fields
-        document.getElementById('editExpenseDate').value = expense.date;
+        // Populate form fields - convert date to proper format for HTML date input
+        const dateForInput = this.convertToDateInputFormat(expense.date);
+        document.getElementById('editExpenseDate').value = dateForInput;
         document.getElementById('editExpenseAmount').value = expense.amount;
         document.getElementById('editExpenseDescription').value = expense.description;
         document.getElementById('editExpenseLabel').value = expense.label;
@@ -994,6 +996,48 @@ class ExpenseTracker {
         return `${day}-${month}-${year}`;
     }
 
+    // Convert date to HTML date input format (YYYY-MM-DD)
+    convertToDateInputFormat(dateString) {
+        if (!dateString) return '';
+        
+        // If already in YYYY-MM-DD format, return as is
+        if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
+            return dateString;
+        }
+        
+        // Handle dd-MMM-yyyy format (e.g., 02-Oct-2025)
+        if (/^\d{2}-\w{3}-\d{4}$/.test(dateString)) {
+            const parts = dateString.split('-');
+            const day = parts[0];
+            const monthStr = parts[1];
+            const year = parts[2];
+            
+            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+                           'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            const monthIndex = months.indexOf(monthStr);
+            
+            if (monthIndex !== -1) {
+                const month = (monthIndex + 1).toString().padStart(2, '0');
+                return `${year}-${month}-${day}`;
+            }
+        }
+        
+        // Try parsing as a general date and convert to YYYY-MM-DD
+        try {
+            const date = new Date(dateString);
+            if (!isNaN(date.getTime())) {
+                const year = date.getFullYear();
+                const month = (date.getMonth() + 1).toString().padStart(2, '0');
+                const day = date.getDate().toString().padStart(2, '0');
+                return `${year}-${month}-${day}`;
+            }
+        } catch (error) {
+            console.warn('Unable to parse date:', dateString);
+        }
+        
+        return '';
+    }
+
     // Show message
     showMessage(text, type) {
         const messageContainer = document.getElementById('messageContainer');
@@ -1019,8 +1063,29 @@ class ExpenseTracker {
             // Save default data
             localStorage.setItem('expenseLabels', JSON.stringify(this.labels));
             localStorage.setItem('paymentOptions', JSON.stringify(this.paymentOptions));
+            
+            // Add sample expense for testing
+            this.addSampleExpense();
         }
     }
+
+    // Add sample expense for testing
+    addSampleExpense() {
+        const sampleExpense = {
+            id: 'sample-' + Date.now(),
+            date: '2025-10-02',
+            amount: 100.50,
+            description: 'Sample grocery shopping',
+            label: 'FOOD',
+            paymentOption: 'CASH',
+            timestamp: new Date().toISOString()
+        };
+        
+        this.saveExpense(sampleExpense);
+        console.log('Added sample expense:', sampleExpense);
+    }
+
+
 
     // Export expenses (bonus feature)
     exportExpenses() {

@@ -225,14 +225,33 @@ nav {
     margin-top: 5px;
 }
 
-/* Hide native date input when using quick selection */
-.form-group input[type="date"] {
+/* Hide native date input when using quick selection (only for add expense page) */
+#addExpensePage .form-group input[type="date"] {
     display: none;
 }
 
-.form-group input[type="date"].show-custom {
+#addExpensePage .form-group input[type="date"].show-custom {
     display: block;
     margin-top: 5px;
+}
+
+/* Show date input in edit modal */
+#editModal .form-group input[type="date"] {
+    display: block;
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid #e2e8f0;
+    border-radius: 10px;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    background: rgba(255, 255, 255, 0.8);
+}
+
+#editModal .form-group input[type="date"]:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    background: white;
 }
 
 .format-hint, .char-count {
@@ -829,7 +848,7 @@ table tbody tr:nth-child(even) {
 .modal {
     display: none;
     position: fixed;
-    z-index: 2000;
+    z-index: 9999;
     left: 0;
     top: 0;
     width: 100%;

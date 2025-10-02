@@ -1,6 +1,20 @@
 # 🧾 Daily Expense Tracker
 
-A comprehensive web application for tracking daily expenses with smart categorization, file import/export capabilities, and detailed financial summaries. Built with modern web technologies for a seamless user experience across all devices.
+A comprehensive w### 📄 List Added Expenses Page
+- **Monthly Navigation**: Browse expenses by month with arrow controls
+- **Expense Table**: Complete list with S.No, Date, Amount, Description, Label, Payment Option
+- **Full Editing Capability**: Edit all fields including dates with calendar picker support
+- **Enhanced Date Editing**: Fixed date field editing with proper calendar functionality
+- **Delete Protection**: Confirmation dialogs for expense deletionplication for tracking daily expenses with smart categorization, bulk entry capabilities, file import/export features, and detailed financial summaries. Features both single and multi-expense entry modes for maximum efficiency. Built with modern web technologies for a seamless user experience across all devices.
+
+## Application Structure
+
+The application features a clean, tab-based navigation system with four main sections:
+
+1. **📥 Add Expense** - Single expense entry with smart quick-selection buttons
+2. **📋 Add Multiple** - Bulk expense entry with table-based interface  
+3. **📄 List Expenses** - View, edit, and manage existing expenses with summaries
+4. **⚙️ Settings** - Manage labels and payment options with full CRUD operations
 
 ## Features
 
@@ -28,7 +42,24 @@ A comprehensive web application for tracking daily expenses with smart categoriz
 - **Payment Option**: Autocomplete suggestions from payment methods
 - **Auto-save**: New labels and payment options are automatically saved
 
-### 📄 List Added Expenses Page
+### � Add Multiple Expenses Tab (New!)
+- **Bulk Entry Interface**: Table-based design for adding multiple expenses efficiently
+- **Dynamic Row Management**: 
+  - **Add Row** button to create new expense entries
+  - **Remove Row** functionality for individual rows (first row protected)
+  - Unlimited rows supported for bulk data entry
+- **Smart Date Copying**: New rows automatically inherit date from previous row
+- **Real-time Summary**: 
+  - Live count of total rows
+  - Automatic calculation of total amount across all rows
+- **Familiar Interface**: Same column structure as List Expenses for consistency
+- **Bulk Save**: Single "Save All Expenses" button to process all rows at once
+- **Input Validation**: Comprehensive validation for all fields before saving
+- **Integration**: Full compatibility with existing labels and payment suggestions
+- **Responsive Design**: Optimized table layout for both desktop and mobile
+- **Error Handling**: Row-specific error messages for efficient troubleshooting
+
+### �📄 List Added Expenses Page
 - **Monthly Navigation**: Browse expenses by month with arrow controls
 - **Expense Table**: Complete list with S.No, Date, Amount, Description, Label, Payment Option
 - **Inline Editing**: Edit expenses directly with modal forms
@@ -149,30 +180,59 @@ Payment: UPI-DCB-NIYO
 
 ## Usage
 
-1. **Adding Expenses**:
+1. **Single Expense Entry**:
    - Click "📥 Add Expense" tab
-   - Fill in all required fields
+   - Use quick date buttons or manual date picker
+   - Fill in amount, description, label, and payment option
+   - Click quick selection buttons or type custom values
    - Click "Add Expense" to save
    - Use "Clear" to reset the form
 
-2. **Viewing Expenses**:
+2. **Bulk Expense Entry** (New!):
+   - Click "📋 Add Multiple" tab
+   - Fill in the first row with expense details
+   - Click "Add Row" to create additional entries
+   - Each new row automatically copies the previous date
+   - Modify dates, amounts, and details for each row
+   - Use "Remove" buttons to delete unwanted rows
+   - Click "Save All Expenses" to process all entries at once
+   - Use "Clear All" to start over with a fresh table
+
+3. **Viewing & Editing Expenses**:
    - Click "📄 List Expenses" tab
    - Use month navigation arrows to browse different months
+   - Click "Edit" buttons to modify any expense field (including dates)
    - View three summary tables: expenses, labels, and payment methods
-
-3. **Managing Data**:
-   - New labels and payment options are automatically saved
-   - Delete individual expenses using the trash icon
-   - Import expenses from CSV/TXT files
-   - Download expense data in CSV or TXT format
-   - All data persists between browser sessions
+   - Delete individual expenses using confirmation dialogs
 
 4. **Settings Management**:
    - Click "⚙️ Settings" tab
-   - Add new labels or payment options
-   - Edit existing items by clicking the edit icon
-   - Delete items with the trash icon (with confirmation)
-   - Reset to default values if needed
+   - Add, edit, or delete custom labels and payment options
+   - Reset to default categories if needed
+   - Changes immediately reflect in all expense forms
+
+5. **Data Management**:
+   - New labels and payment options are automatically saved
+   - Import expenses from CSV/TXT files with smart parsing
+   - Download expense data in CSV or TXT format
+   - All data persists between browser sessions
+
+## Recent Updates (v1.4.0)
+
+### 🆕 New Features
+- **Add Multiple Expenses Tab**: Bulk entry interface for efficient data input
+- **Enhanced Date Editing**: Fixed date calendar picker in edit modal
+- **Smart Row Management**: Dynamic add/remove rows with date copying
+
+### 🔧 Improvements
+- **Better Modal System**: Improved z-index and focus management
+- **Robust Date Handling**: Support for multiple date formats
+- **Responsive Design**: Enhanced mobile experience for multi-row interface
+
+### 🐛 Bug Fixes
+- **Date Field Editing**: Resolved issue where date fields weren't editable in edit modal
+- **CSS Specificity**: Fixed conflicts that were hiding date inputs
+- **Format Conversion**: Added backward compatibility for different date storage formats
 
 ## Browser Compatibility
 

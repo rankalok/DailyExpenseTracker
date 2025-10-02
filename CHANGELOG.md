@@ -5,6 +5,43 @@ All notable changes to the Daily Expense Tracker project will be documented in t
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.0] - 2025-10-02
+
+### Added
+- **Add Multiple Expenses Tab**
+  - New dedicated "📋 Add Multiple" tab for bulk expense entry
+  - Table-based interface similar to List Expenses for intuitive data entry
+  - Dynamic row management with "Add Row" and "Remove Row" functionality
+  - Smart date copying - new rows automatically copy date from previous row
+  - Real-time summary showing total rows and total amount
+  - Bulk save functionality to add all rows at once
+  - Integration with existing label and payment option suggestions
+  - Responsive design for desktop and mobile devices
+
+### Fixed
+- **Date Field Editing in List Expenses**
+  - Resolved issue where date field in edit modal was not editable
+  - Fixed missing calendar picker in edit modal date inputs
+  - Added robust date format conversion for different stored date formats
+  - Improved CSS specificity to prevent date input hiding in edit modal
+  - Enhanced date input styling with proper focus states
+
+### Improved
+- **Enhanced Modal System**
+  - Better z-index management for modal overlays
+  - Improved date format handling across different input scenarios
+  - Cleaner code organization for modal-related functionality
+
+### Technical
+- **Date Format Conversion**
+  - Added `convertToDateInputFormat()` method for robust date parsing
+  - Support for YYYY-MM-DD, dd-MMM-yyyy, and generic date formats
+  - Backward compatibility with existing stored data
+- **CSS Architecture**
+  - Refined selector specificity for better component isolation
+  - Added specific styling for edit modal date inputs
+  - Improved responsive design for multi-row interface
+
 ## [1.3.0] - 2025-10-02
 
 ### Added
