@@ -13,6 +13,7 @@
             <h1>🧾 Daily Expense Tracker</h1>
             <nav>
                 <button id="addExpenseTab" class="nav-btn active">📥 Add Expense</button>
+                <button id="addMultipleTab" class="nav-btn">📋 Add Multiple</button>
                 <button id="listExpensesTab" class="nav-btn">📄 List Expenses</button>
                 <button id="settingsTab" class="nav-btn">⚙️ Settings</button>
             </nav>
@@ -95,6 +96,53 @@
                         </button>
                     </div>
                 </form>
+            </div>
+        </div>
+
+        <!-- Add Multiple Expenses Page -->
+        <div id="addMultiplePage" class="page">
+            <div class="multi-expense-container">
+                <div class="multi-expense-header">
+                    <h2>📋 Add Multiple Expenses</h2>
+                    <div class="header-actions">
+                        <button type="button" id="addMultiRowBtn" class="btn btn-add-row">
+                            <i class="fas fa-plus"></i> Add Row
+                        </button>
+                        <button type="button" id="saveAllExpensesBtn" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Save All Expenses
+                        </button>
+                        <button type="button" id="clearAllMultiRowsBtn" class="btn btn-secondary">
+                            <i class="fas fa-trash"></i> Clear All
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Multi-Expense Table -->
+                <div class="multi-expense-table-container">
+                    <table id="multiExpenseTable" class="multi-expense-table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Amount</th>
+                                <th>Description</th>
+                                <th>Label</th>
+                                <th>Payment Option</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="multiExpenseTableBody">
+                            <!-- Dynamic rows will be added here -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Summary Section -->
+                <div class="multi-expense-summary">
+                    <div class="summary-stats">
+                        <span class="total-rows">Total Rows: <strong id="totalRowCount">0</strong></span>
+                        <span class="total-amount">Total Amount: ₹<strong id="multiTotalAmount">0.00</strong></span>
+                    </div>
+                </div>
             </div>
         </div>
 

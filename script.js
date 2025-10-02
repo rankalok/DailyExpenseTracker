@@ -276,6 +276,7 @@ class ExpenseTracker {
     attachEventListeners() {
         // Tab navigation
         document.getElementById('addExpenseTab').addEventListener('click', () => this.switchToPage('addExpense'));
+        document.getElementById('addMultipleTab').addEventListener('click', () => this.switchToPage('addMultiple'));
         document.getElementById('listExpensesTab').addEventListener('click', () => this.switchToPage('listExpenses'));
         document.getElementById('settingsTab').addEventListener('click', () => this.switchToPage('settings'));
 
@@ -354,6 +355,11 @@ class ExpenseTracker {
         document.getElementById('newPaymentOption').addEventListener('keypress', (e) => {
             if (e.key === 'Enter') this.addNewPaymentOption();
         });
+
+        // Multi-expense functionality event listeners
+        document.getElementById('addMultiRowBtn').addEventListener('click', () => this.addMultiExpenseRow());
+        document.getElementById('saveAllExpensesBtn').addEventListener('click', () => this.saveAllMultiExpenses());
+        document.getElementById('clearAllMultiRowsBtn').addEventListener('click', () => this.clearAllMultiRows());
     }
 
     // Switch between pages
@@ -367,6 +373,10 @@ class ExpenseTracker {
             document.getElementById('addExpenseTab').classList.add('active');
             // Refresh quick selection buttons when switching to add expense page
             this.updateQuickSelectionButtons();
+        } else if (page === 'addMultiple') {
+            document.getElementById('addMultiplePage').classList.add('active');
+            document.getElementById('addMultipleTab').classList.add('active');
+            this.initializeMultiExpenseTable();
         } else if (page === 'listExpenses') {
             document.getElementById('listExpensesPage').classList.add('active');
             document.getElementById('listExpensesTab').classList.add('active');
@@ -477,6 +487,216 @@ class ExpenseTracker {
         // Reset quick selection buttons
         document.querySelectorAll('.btn-quick-label').forEach(btn => btn.classList.remove('active'));
         document.querySelectorAll('.btn-quick-payment').forEach(btn => btn.classList.remove('active'));
+    }
+
+    // Multi-Expense Functionality
+    initializeMultiExpenseTable() {
+        // Initialize with one empty row if table is empty
+        const tableBody = document.getElementById('multiExpenseTableBody');
+        if (tableBody.children.length === 0) {
+            this.addMultiExpenseRow();
+        }
+        this.updateMultiExpenseSummary();
+    }
+
+    addMultiExpenseRow() {
+        const tableBody = document.getElementById('multiExpenseTableBody');
+        const rowCount = tableBody.children.length;
+        const rowIndex = rowCount;
+        
+        // Get date from last row or use current date for first row
+        let defaultDate = new Date().toISOString().split('T')[0]; // Current date
+        if (rowCount > 0) {
+            const lastRow = tableBody.children[rowCount - 1];
+            const lastDateInput = lastRow.querySelector('input[type="date"]');
+            if (lastDateInput && lastDateInput.value) {
+                // Copy date from last row
+                defaultDate = lastDateInput.value;
+            }
+        }
+
+        const row = document.createElement('tr');
+        row.dataset.rowIndex = rowIndex;
+        
+        row.innerHTML = `
+            <td>
+                <input type="date" name="date_${rowIndex}" value="${defaultDate}" required 
+                       onchange="expenseTracker.updateMultiExpenseSummary()">
+            </td>
+            <td>
+                <input type="number" name="amount_${rowIndex}" step="0.01" min="0" placeholder="0.00" required
+                       oninput="expenseTracker.updateMultiExpenseSummary()">
+            </td>
+            <td>
+                <input type="text" name="description_${rowIndex}" maxlength="200" placeholder="Enter description" required>
+            </td>
+            <td>
+                <input type="text" name="label_${rowIndex}" list="labelSuggestions" placeholder="Select label" required>
+            </td>
+            <td>
+                <input type="text" name="payment_${rowIndex}" list="paymentSuggestions" placeholder="Payment method" required>
+            </td>
+            <td>
+                <button type="button" class="btn-add-row" onclick="expenseTracker.addMultiExpenseRow()" title="Add Row">
+                    <i class="fas fa-plus"></i>
+                </button>
+                ${rowCount > 0 ? `
+                <button type="button" class="btn-remove-row" onclick="expenseTracker.removeMultiExpenseRow(${rowIndex})" title="Remove Row">
+                    <i class="fas fa-trash"></i>
+                </button>
+                ` : ''}
+            </td>
+        `;
+        
+        tableBody.appendChild(row);
+        this.updateMultiExpenseSummary();
+        
+        // Focus on the amount field of the new row
+        const newAmountInput = row.querySelector('input[type="number"]');
+        if (newAmountInput) {
+            newAmountInput.focus();
+        }
+    }
+
+    removeMultiExpenseRow(rowIndex) {
+        const tableBody = document.getElementById('multiExpenseTableBody');
+        const row = tableBody.querySelector(`tr[data-row-index="${rowIndex}"]`);
+        if (row && tableBody.children.length > 1) { // Always keep at least one row
+            row.remove();
+            this.reindexMultiExpenseRows();
+            this.updateMultiExpenseSummary();
+        }
+    }
+
+    reindexMultiExpenseRows() {
+        const tableBody = document.getElementById('multiExpenseTableBody');
+        Array.from(tableBody.children).forEach((row, index) => {
+            row.dataset.rowIndex = index;
+            
+            // Update input names
+            row.querySelectorAll('input').forEach(input => {
+                const currentName = input.name;
+                const namePrefix = currentName.split('_')[0];
+                input.name = `${namePrefix}_${index}`;
+            });
+            
+            // Update button onclick attributes
+            const removeBtn = row.querySelector('.btn-remove-row');
+            if (removeBtn) {
+                removeBtn.setAttribute('onclick', `expenseTracker.removeMultiExpenseRow(${index})`);
+            }
+            
+            // Hide remove button for first row
+            if (index === 0 && removeBtn) {
+                removeBtn.style.display = 'none';
+            }
+        });
+    }
+
+    updateMultiExpenseSummary() {
+        const tableBody = document.getElementById('multiExpenseTableBody');
+        const rows = tableBody.children;
+        let totalAmount = 0;
+        let validRows = 0;
+
+        Array.from(rows).forEach(row => {
+            const amountInput = row.querySelector('input[type="number"]');
+            if (amountInput && amountInput.value) {
+                const amount = parseFloat(amountInput.value);
+                if (!isNaN(amount) && amount > 0) {
+                    totalAmount += amount;
+                    validRows++;
+                }
+            }
+        });
+
+        document.getElementById('totalRowCount').textContent = rows.length;
+        document.getElementById('multiTotalAmount').textContent = totalAmount.toFixed(2);
+    }
+
+    saveAllMultiExpenses() {
+        const tableBody = document.getElementById('multiExpenseTableBody');
+        const rows = Array.from(tableBody.children);
+        const expenses = [];
+        
+        // Collect and validate all row data
+        let hasErrors = false;
+        rows.forEach((row, index) => {
+            const dateInput = row.querySelector('input[type="date"]');
+            const amountInput = row.querySelector('input[type="number"]');
+            const descriptionInput = row.querySelector('input[type="text"]');
+            const labelInput = row.querySelector('input[name^="label"]');
+            const paymentInput = row.querySelector('input[name^="payment"]');
+            
+            // Validate row data
+            if (!dateInput.value || !amountInput.value || !descriptionInput.value || 
+                !labelInput.value || !paymentInput.value) {
+                this.showMessage(`Row ${index + 1}: Please fill in all required fields.`, 'error');
+                hasErrors = true;
+                return;
+            }
+            
+            const amount = parseFloat(amountInput.value);
+            if (isNaN(amount) || amount <= 0) {
+                this.showMessage(`Row ${index + 1}: Amount must be greater than 0.`, 'error');
+                hasErrors = true;
+                return;
+            }
+            
+            // Create expense object
+            const expense = {
+                id: Date.now().toString() + '_' + index,
+                date: dateInput.value,
+                amount: amount,
+                description: descriptionInput.value.trim(),
+                label: labelInput.value.trim().toUpperCase(),
+                paymentOption: paymentInput.value.trim().toUpperCase(),
+                timestamp: new Date().toISOString()
+            };
+            
+            expenses.push(expense);
+        });
+        
+        if (hasErrors || expenses.length === 0) {
+            return;
+        }
+        
+        // Save all expenses
+        let savedCount = 0;
+        expenses.forEach(expense => {
+            try {
+                this.saveExpense(expense);
+                
+                // Update suggestions
+                this.handleNewLabel({ target: { value: expense.label } });
+                this.handleNewPaymentOption({ target: { value: expense.paymentOption } });
+                
+                savedCount++;
+            } catch (error) {
+                console.error('Error saving expense:', error);
+            }
+        });
+        
+        if (savedCount > 0) {
+            this.showMessage(`Successfully saved ${savedCount} expense(s)!`, 'success');
+            this.clearAllMultiRows();
+            this.updateQuickSelectionButtons();
+            
+            // If we're viewing the same month, refresh the list
+            const currentViewMonth = new Date(this.currentMonth);
+            const expenseMonth = new Date(expenses[0].date);
+            if (currentViewMonth.getFullYear() === expenseMonth.getFullYear() && 
+                currentViewMonth.getMonth() === expenseMonth.getMonth()) {
+                this.loadCurrentMonthExpenses();
+            }
+        }
+    }
+
+    clearAllMultiRows() {
+        const tableBody = document.getElementById('multiExpenseTableBody');
+        tableBody.innerHTML = '';
+        this.addMultiExpenseRow(); // Add one empty row
+        this.updateMultiExpenseSummary();
     }
 
     // Update character count for description

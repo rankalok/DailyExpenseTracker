@@ -324,6 +324,189 @@ nav {
     box-shadow: 0 4px 15px rgba(66, 153, 225, 0.4);
 }
 
+/* Multi-Expense Page Styles */
+.multi-expense-container {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border-radius: 15px;
+    padding: 30px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+.multi-expense-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.multi-expense-header h2 {
+    color: #4a5568;
+    font-size: 1.8rem;
+    margin: 0;
+}
+
+.header-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.btn-add-row {
+    padding: 10px 16px;
+    border: none;
+    border-radius: 20px;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.btn-add-row:hover {
+    background: linear-gradient(135deg, #5a67d8, #6b46c1);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+}
+
+.multi-expense-table-container {
+    background: white;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+}
+
+.multi-expense-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+}
+
+.multi-expense-table th {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    padding: 15px 10px;
+    text-align: left;
+    font-weight: 600;
+    border-bottom: 2px solid #5a67d8;
+}
+
+.multi-expense-table td {
+    padding: 12px 10px;
+    border-bottom: 1px solid #e2e8f0;
+    vertical-align: middle;
+}
+
+.multi-expense-table tbody tr:hover {
+    background-color: #f7fafc;
+}
+
+.multi-expense-table input {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    transition: border-color 0.2s ease;
+}
+
+.multi-expense-table input:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.1);
+}
+
+.multi-expense-table input[type="date"] {
+    min-width: 140px;
+}
+
+.multi-expense-table input[type="number"] {
+    min-width: 100px;
+}
+
+.multi-expense-table input[type="text"] {
+    min-width: 150px;
+}
+
+.btn-remove-row {
+    padding: 6px 10px;
+    border: none;
+    border-radius: 15px;
+    background: linear-gradient(135deg, #f56565, #e53e3e);
+    color: white;
+    cursor: pointer;
+    font-size: 0.8rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.btn-remove-row:hover {
+    background: linear-gradient(135deg, #e53e3e, #c53030);
+    transform: translateY(-1px);
+    box-shadow: 0 3px 10px rgba(245, 101, 101, 0.4);
+}
+
+.multi-expense-summary {
+    background: linear-gradient(135deg, #f7fafc, #edf2f7);
+    border-radius: 10px;
+    padding: 20px;
+    border: 1px solid #e2e8f0;
+}
+
+.summary-stats {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.summary-stats span {
+    color: #4a5568;
+    font-size: 1rem;
+}
+
+.summary-stats strong {
+    color: #2d3748;
+    font-size: 1.2rem;
+}
+
+/* Responsive adjustments for multi-expense table */
+@media (max-width: 768px) {
+    .multi-expense-header {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .header-actions {
+        justify-content: center;
+    }
+    
+    .multi-expense-table-container {
+        overflow-x: auto;
+    }
+    
+    .multi-expense-table {
+        min-width: 800px;
+    }
+    
+    .summary-stats {
+        flex-direction: column;
+        gap: 10px;
+        text-align: center;
+    }
+}
+
 /* List Page Styles */
 .list-container {
     background: rgba(255, 255, 255, 0.95);
