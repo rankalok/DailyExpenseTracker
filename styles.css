@@ -165,6 +165,58 @@ nav {
     border-color: #667eea;
 }
 
+/* Quick Label Selection Buttons */
+.quick-label-buttons,
+.quick-payment-buttons {
+    display: none; /* Hidden by default, shown dynamically when there are expenses */
+    gap: 6px;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
+}
+
+.btn-quick-label,
+.btn-quick-payment {
+    padding: 4px 10px;
+    border: 1px solid #e2e8f0;
+    border-radius: 15px;
+    background: rgba(255, 255, 255, 0.9);
+    color: #4a5568;
+    cursor: pointer;
+    font-size: 0.8rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.btn-quick-label:hover,
+.btn-quick-payment:hover {
+    background: #48bb78;
+    color: white;
+    border-color: #48bb78;
+    transform: translateY(-1px);
+}
+
+.btn-quick-label.active,
+.btn-quick-payment.active {
+    background: #48bb78;
+    color: white;
+    border-color: #48bb78;
+}
+
+/* More button styling */
+#moreLabelsBtn,
+#morePaymentsBtn {
+    background: rgba(102, 126, 234, 0.1) !important;
+    border-color: #667eea !important;
+    color: #667eea !important;
+}
+
+#moreLabelsBtn:hover,
+#morePaymentsBtn:hover {
+    background: #667eea !important;
+    color: white !important;
+}
+
 .date-display {
     background: rgba(102, 126, 234, 0.1) !important;
     font-weight: 600;

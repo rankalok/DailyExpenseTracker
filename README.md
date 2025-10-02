@@ -10,6 +10,18 @@ A comprehensive web application for tracking daily expenses with smart categoriz
   - **Yesterday** button: Previous day (1 click)
   - **Last Month** button: Same day from previous month (1 click) - Perfect for monthly recurring expenses
   - **Custom** button: Manual date picker for any specific date
+
+- **Smart Label Selection**: Dynamic quick buttons + autocomplete dropdown
+  - **Top 5 most used labels** from current month's expenses (1 click each)
+  - **Intelligent adaptation**: Buttons update based on your actual usage patterns
+  - **More...** button: Access full label list via dropdown
+  - **Hidden when empty**: No buttons shown for new users until expenses are added
+
+- **Smart Payment Selection**: Dynamic quick buttons + autocomplete dropdown  
+  - **Top 5 most used payment methods** from current month's expenses (1 click each)
+  - **Personalized experience**: Buttons reflect your actual payment preferences
+  - **More...** button: Access full payment options via dropdown  
+  - **Hidden when empty**: No buttons shown for new users until expenses are added
 - **Amount**: Numeric input with 2 decimal places support
 - **Description**: Text input (max 200 characters with live counter)
 - **Label**: Autocomplete suggestions from predefined categories

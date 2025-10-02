@@ -60,16 +60,30 @@
                         <label for="expenseLabel">
                             <i class="fas fa-tags"></i> Label
                         </label>
+                        
+                        <!-- Dynamic Quick Label Selection Buttons -->
+                        <div class="quick-label-buttons" id="quickLabelContainer">
+                            <!-- Dynamically populated based on current month's most used labels -->
+                        </div>
+                        
                         <input type="text" id="expenseLabel" list="labelSuggestions" placeholder="Select or enter label" required>
                         <datalist id="labelSuggestions"></datalist>
+                        <small class="format-hint">Quick select: Most used labels this month | Type for more options</small>
                     </div>
 
                     <div class="form-group">
                         <label for="paymentOption">
                             <i class="fas fa-credit-card"></i> Payment Option
                         </label>
+                        
+                        <!-- Dynamic Quick Payment Option Selection Buttons -->
+                        <div class="quick-payment-buttons" id="quickPaymentContainer">
+                            <!-- Dynamically populated based on current month's most used payment options -->
+                        </div>
+                        
                         <input type="text" id="paymentOption" list="paymentSuggestions" placeholder="Select or enter payment method" required>
                         <datalist id="paymentSuggestions"></datalist>
+                        <small class="format-hint">Quick select: Most used payments this month | Type for more options</small>
                     </div>
 
                     <div class="form-actions">

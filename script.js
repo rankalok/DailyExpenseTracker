@@ -22,6 +22,9 @@ class ExpenseTracker {
         
         // Set default date (today) and activate today button
         this.setQuickDate('today');
+        
+        // Update quick selection buttons based on current month's data
+        this.updateQuickSelectionButtons();
     }
 
     // Load default labels
@@ -131,6 +134,144 @@ class ExpenseTracker {
         this.updateDateDisplay(dateString);
     }
 
+    // Quick label selection
+    selectQuickLabel(label) {
+        document.getElementById('expenseLabel').value = label;
+        
+        // Remove active class from all label buttons
+        document.querySelectorAll('.btn-quick-label').forEach(btn => btn.classList.remove('active'));
+        
+        // Add active class to selected button
+        document.querySelector(`[data-label="${label}"]`).classList.add('active');
+    }
+
+    // Quick payment selection
+    selectQuickPayment(payment) {
+        document.getElementById('paymentOption').value = payment;
+        
+        // Remove active class from all payment buttons
+        document.querySelectorAll('.btn-quick-payment').forEach(btn => btn.classList.remove('active'));
+        
+        // Add active class to selected button
+        document.querySelector(`[data-payment="${payment}"]`).classList.add('active');
+    }
+
+    // Show all labels in datalist
+    showAllLabels() {
+        const input = document.getElementById('expenseLabel');
+        input.click(); // Trigger datalist dropdown
+    }
+
+    // Show all payments in datalist
+    showAllPayments() {
+        const input = document.getElementById('paymentOption');
+        input.click(); // Trigger datalist dropdown
+    }
+
+    // Calculate frequency of labels and payment options from current month's expenses
+    calculateFrequency(data, key) {
+        const frequency = {};
+        
+        data.forEach(item => {
+            const value = item[key];
+            frequency[value] = (frequency[value] || 0) + 1;
+        });
+        
+        // Sort by frequency (descending) and return top 5
+        return Object.entries(frequency)
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 5)
+            .map(entry => entry[0]);
+    }
+
+    // Update quick selection buttons based on current month's data
+    updateQuickSelectionButtons() {
+        const labelContainer = document.getElementById('quickLabelContainer');
+        const paymentContainer = document.getElementById('quickPaymentContainer');
+        
+        // If no expenses this month, hide quick selection
+        if (this.expenses.length === 0) {
+            labelContainer.style.display = 'none';
+            paymentContainer.style.display = 'none';
+            return;
+        }
+        
+        // Show containers if there are expenses
+        labelContainer.style.display = 'flex';
+        paymentContainer.style.display = 'flex';
+        
+        // Calculate top 5 most used labels and payment options
+        const topLabels = this.calculateFrequency(this.expenses, 'label');
+        const topPayments = this.calculateFrequency(this.expenses, 'paymentOption');
+        
+        // Generate quick label buttons
+        this.generateQuickButtons(labelContainer, topLabels, 'label');
+        
+        // Generate quick payment buttons
+        this.generateQuickButtons(paymentContainer, topPayments, 'payment');
+    }
+
+    // Generate quick selection buttons
+    generateQuickButtons(container, items, type) {
+        // Clear existing buttons
+        container.innerHTML = '';
+        
+        // Create buttons for top items
+        items.forEach(item => {
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = type === 'label' ? 'btn-quick-label' : 'btn-quick-payment';
+            button.dataset[type] = item;
+            
+            // Format display text (capitalize first letter, replace hyphens)
+            const displayText = this.formatDisplayText(item);
+            button.textContent = displayText;
+            
+            // Add click event
+            button.addEventListener('click', () => {
+                if (type === 'label') {
+                    this.selectQuickLabel(item);
+                } else {
+                    this.selectQuickPayment(item);
+                }
+            });
+            
+            container.appendChild(button);
+        });
+        
+        // Add "More..." button if there are items
+        if (items.length > 0) {
+            const moreButton = document.createElement('button');
+            moreButton.type = 'button';
+            moreButton.className = type === 'label' ? 'btn-quick-label' : 'btn-quick-payment';
+            moreButton.id = type === 'label' ? 'moreLabelsBtn' : 'morePaymentsBtn';
+            moreButton.textContent = 'More...';
+            
+            // Add click event for More button
+            moreButton.addEventListener('click', () => {
+                if (type === 'label') {
+                    document.getElementById('expenseLabel').focus();
+                    this.showAllLabels();
+                } else {
+                    document.getElementById('paymentOption').focus();
+                    this.showAllPayments();
+                }
+            });
+            
+            container.appendChild(moreButton);
+        }
+    }
+
+    // Format text for display (make it more readable)
+    formatDisplayText(text) {
+        return text
+            .toLowerCase()
+            .split('-')
+            .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+            .join(' ')
+            .substring(0, 12); // Limit length for button display
+    }
+
     // Attach event listeners
     attachEventListeners() {
         // Tab navigation
@@ -154,6 +295,18 @@ class ExpenseTracker {
             // Remove active class from quick date buttons when manually changing date
             document.querySelectorAll('.btn-quick-date').forEach(btn => btn.classList.remove('active'));
             document.getElementById('customDateBtn').classList.add('active');
+        });
+
+        // Note: Quick label and payment selection event listeners are now 
+        // dynamically added in generateQuickButtons() method
+
+        // Clear active states when typing manually
+        document.getElementById('expenseLabel').addEventListener('input', () => {
+            document.querySelectorAll('.btn-quick-label').forEach(btn => btn.classList.remove('active'));
+        });
+
+        document.getElementById('paymentOption').addEventListener('input', () => {
+            document.querySelectorAll('.btn-quick-payment').forEach(btn => btn.classList.remove('active'));
         });
 
         // Character count for description
@@ -212,6 +365,8 @@ class ExpenseTracker {
         if (page === 'addExpense') {
             document.getElementById('addExpensePage').classList.add('active');
             document.getElementById('addExpenseTab').classList.add('active');
+            // Refresh quick selection buttons when switching to add expense page
+            this.updateQuickSelectionButtons();
         } else if (page === 'listExpenses') {
             document.getElementById('listExpensesPage').classList.add('active');
             document.getElementById('listExpensesTab').classList.add('active');
@@ -252,6 +407,9 @@ class ExpenseTracker {
         // Update suggestions if new labels/payment options were added
         this.handleNewLabel({ target: { value: expense.label } });
         this.handleNewPaymentOption({ target: { value: expense.paymentOption } });
+        
+        // Update quick selection buttons with new frequency data
+        this.updateQuickSelectionButtons();
     }
 
     // Validate expense data
@@ -315,6 +473,10 @@ class ExpenseTracker {
         document.getElementById('expenseForm').reset();
         this.setQuickDate('today'); // This will set current date and activate today button
         this.updateCharCount({ target: { value: '' } });
+        
+        // Reset quick selection buttons
+        document.querySelectorAll('.btn-quick-label').forEach(btn => btn.classList.remove('active'));
+        document.querySelectorAll('.btn-quick-payment').forEach(btn => btn.classList.remove('active'));
     }
 
     // Update character count for description
@@ -594,6 +756,9 @@ class ExpenseTracker {
         
         this.displayExpenses();
         this.showMessage('Expense deleted successfully!', 'success');
+        
+        // Update quick selection buttons since data changed
+        this.updateQuickSelectionButtons();
     }
 
     // Format date for display
@@ -766,6 +931,8 @@ class ExpenseTracker {
                 if (loadedExpenses.length > 0) {
                     this.mergeExpenses(loadedExpenses);
                     this.showMessage(`Successfully loaded ${loadedExpenses.length} expenses!`, 'success');
+                    // Update quick selection buttons with new data
+                    this.updateQuickSelectionButtons();
                 } else {
                     this.showMessage('No valid expenses found in the file.', 'error');
                 }

@@ -15,6 +15,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Smart formatted date display (dd-MMM-YYYY) alongside quick buttons
   - Auto-hide native date picker when using quick selection for cleaner UI
 
+- **Smart Quick Label Selection Feature**
+  - **Dynamic buttons showing top 5 most used labels** from current month's expenses
+  - **Intelligent adaptation**: Buttons automatically update based on actual usage patterns
+  - **Personalized experience**: Different users see different quick options based on their habits
+  - **Hidden when empty**: No buttons shown until expenses exist (clean UI for new users)
+  - **Real-time updates**: Buttons refresh after adding/deleting expenses or importing data
+
+- **Smart Quick Payment Selection Feature**
+  - **Dynamic buttons showing top 5 most used payment methods** from current month's expenses  
+  - **Usage-based prioritization**: Most frequently used payments become quick buttons
+  - **Adaptive interface**: Buttons change monthly based on spending patterns
+  - **Clean initial state**: Hidden when no expenses exist
+  - **Live frequency tracking**: Updates immediately with data changes
+
 ### Enhanced
 - **Improved UX for Historical Expense Entry**
   - Reduced clicks needed for common date selections from 3+ clicks to 1 click
