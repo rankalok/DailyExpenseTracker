@@ -173,9 +173,11 @@ class MockExpenseTracker {
     }
 
     // CSV/TXT Import functionality
-    parseDate(dateStr) {
+    parseDate(dateStr, fallbackYear = this.currentMonth.getFullYear()) {
+        const normalizedDate = dateStr.replace(/^\uFEFF/, '').trim();
+
         // Handle dd-MMM-YYYY format (primary format)
-        const ddMmmYyyy = dateStr.match(/^(\d{1,2})-([A-Za-z]{3})-(\d{4})$/);
+        const ddMmmYyyy = normalizedDate.match(/^(\d{1,2})-([A-Za-z]{3})-(\d{4})$/);
         if (ddMmmYyyy) {
             const [, day, month, year] = ddMmmYyyy;
             const monthNames = ['jan', 'feb', 'mar', 'apr', 'may', 'jun',
@@ -187,13 +189,82 @@ class MockExpenseTracker {
                 return `${year}-${paddedMonth}-${paddedDay}`;
             }
         }
+
+        const ddMmm = normalizedDate.match(/^(\d{1,2})-([A-Za-z]{3})$/);
+        if (ddMmm && fallbackYear) {
+            const [, day, month] = ddMmm;
+            const monthNames = ['jan', 'feb', 'mar', 'apr', 'may', 'jun',
+                              'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
+            const monthIndex = monthNames.indexOf(month.toLowerCase());
+            if (monthIndex !== -1) {
+                const paddedMonth = (monthIndex + 1).toString().padStart(2, '0');
+                const paddedDay = day.padStart(2, '0');
+                return `${fallbackYear}-${paddedMonth}-${paddedDay}`;
+            }
+        }
         
         // Handle ISO format (already in correct internal format)
-        if (dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
-            return dateStr;
+        if (normalizedDate.match(/^\d{4}-\d{2}-\d{2}$/)) {
+            return normalizedDate;
         }
         
         return null;
+    }
+
+    normalizeImportedContent(content) {
+        return content
+            .replace(/^\uFEFF/, '')
+            .replace(/\u0000/g, '')
+            .replace(/\r\n/g, '\n')
+            .replace(/\r/g, '\n')
+            .trim();
+    }
+
+    isImportHeader(fields) {
+        const normalizedFields = fields.map(field => field.trim().toLowerCase());
+        return normalizedFields.includes('date') &&
+            normalizedFields.includes('amount') &&
+            normalizedFields.includes('description');
+    }
+
+    getDefaultImportColumnMap() {
+        return {
+            date: 0,
+            amount: 1,
+            description: 2,
+            label: 3,
+            paymentOption: 4
+        };
+    }
+
+    buildImportColumnMap(headerFields) {
+        const columnMap = {};
+
+        headerFields.forEach((field, index) => {
+            const normalizedField = field.trim().toLowerCase().replace(/\s+/g, '');
+
+            if (normalizedField === 'date') columnMap.date = index;
+            if (normalizedField === 'amount') columnMap.amount = index;
+            if (normalizedField === 'description') columnMap.description = index;
+            if (normalizedField === 'label') columnMap.label = index;
+            if (normalizedField === 'paymentoption' || normalizedField === 'payment') {
+                columnMap.paymentOption = index;
+            }
+        });
+
+        return {
+            ...this.getDefaultImportColumnMap(),
+            ...columnMap
+        };
+    }
+
+    inferImportYear(fileName = '') {
+        const yearMatch = fileName.match(/(?:19|20)\d{2}/);
+        if (yearMatch) {
+            return parseInt(yearMatch[0], 10);
+        }
+
+        return this.currentMonth.getFullYear();
     }
 
     parseCSVLine(line) {
@@ -218,26 +289,43 @@ class MockExpenseTracker {
         return result;
     }
 
-    importFromCSV(csvContent) {
-        const lines = csvContent.trim().split('\n');
-        if (lines.length < 2) return { success: false, count: 0, error: 'No data to import' };
+    importFromCSV(csvContent, fileName = '') {
+        const normalizedContent = this.normalizeImportedContent(csvContent);
+        const lines = normalizedContent.split('\n').map(line => line.trim()).filter(Boolean);
+        if (lines.length === 0) return { success: false, count: 0, error: 'No data to import' };
+
+        const headerFields = this.parseCSVLine(lines[0]);
+        const hasHeader = this.isImportHeader(headerFields);
+        const columnMap = hasHeader ? this.buildImportColumnMap(headerFields) : this.getDefaultImportColumnMap();
+        const fallbackYear = this.inferImportYear(fileName);
 
         let imported = 0;
         let skipped = 0;
 
-        // Skip header row
-        for (let i = 1; i < lines.length; i++) {
-            const line = lines[i].trim();
-            if (!line) continue;
+        for (let i = hasHeader ? 1 : 0; i < lines.length; i++) {
+            const line = lines[i];
 
             const fields = this.parseCSVLine(line);
-            if (fields.length >= 5) {
-                const [dateStr, amountStr, description, label, paymentOption] = fields;
-                
-                const date = this.parseDate(dateStr.trim());
+            if (fields.length >= 3) {
+                const getField = (fieldName) => {
+                    const fieldIndex = columnMap[fieldName];
+                    if (fieldIndex === undefined || fieldIndex >= fields.length) {
+                        return '';
+                    }
+
+                    return fields[fieldIndex].trim();
+                };
+
+                const dateStr = getField('date');
+                const amountStr = getField('amount');
+                const description = getField('description');
+                const label = getField('label') || 'MISCELLANEOUS';
+                const paymentOption = getField('paymentOption') || 'CASH';
+
+                const date = this.parseDate(dateStr, fallbackYear);
                 const amount = parseFloat(amountStr.replace(/[₹,]/g, '').trim());
                 
-                if (date && !isNaN(amount) && amount > 0) {
+                if (date && description && !isNaN(amount) && amount > 0) {
                     const expense = {
                         id: this.generateId(),
                         date: date,
@@ -279,7 +367,7 @@ class MockExpenseTracker {
             this.saveToStorage();
         }
 
-        return { success: imported > 0, count: imported, skipped, total: lines.length - 1 };
+        return { success: imported > 0, count: imported, skipped, total: lines.length - (hasHeader ? 1 : 0) };
     }
 
     // Label management
@@ -431,6 +519,25 @@ console.log(`   DEBUG - TXT Import result: success=${txtImportResult.success}, c
 logTest("File Operations", "TXT download → clear → upload cycle",
     txtImportResult.success && expenseCountAfterTxtImport === 3,
     `TXT import successful: ${txtImportResult.count} expenses restored`);
+
+// Test 3.3: Compact CSV import with inferred year and default fields
+tracker.clearAllExpenses();
+const compactCsv = [
+    'Date,Amount,Description',
+    '01-Jan,2000,Petrol',
+    '31-jan,1140,Coffee Sunrise'
+].join('\n');
+const compactImportResult = tracker.importFromCSV(compactCsv, 'JAN2026-expenses.csv');
+const compactImportValid = compactImportResult.success &&
+    tracker.expenses.length === 2 &&
+    tracker.expenses[0].date === '2026-01-01' &&
+    tracker.expenses[0].label === 'MISCELLANEOUS' &&
+    tracker.expenses[0].paymentOption === 'CASH' &&
+    tracker.expenses[1].date === '2026-01-31';
+
+logTest("File Operations", "Compact CSV import with inferred year",
+    compactImportValid,
+    `Imported ${compactImportResult.count} compact rows with fallback year and default category/payment`);
 
 // Test Suite 4: Settings Management
 console.log("\n⚙️ TEST SUITE 4: SETTINGS MANAGEMENT");

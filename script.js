@@ -1205,9 +1205,9 @@ class ExpenseTracker {
                 
                 let loadedExpenses = [];
                 if (fileExtension === 'csv') {
-                    loadedExpenses = this.parseCSV(content);
+                    loadedExpenses = this.parseCSV(content, file.name);
                 } else if (fileExtension === 'txt') {
-                    loadedExpenses = this.parseTXT(content);
+                    loadedExpenses = this.parseTXT(content, file.name);
                 } else {
                     this.showMessage('Unsupported file format. Please use CSV or TXT files.', 'error');
                     return;
@@ -1215,6 +1215,7 @@ class ExpenseTracker {
 
                 if (loadedExpenses.length > 0) {
                     this.mergeExpenses(loadedExpenses);
+                    this.focusImportedMonth(loadedExpenses);
                     this.showMessage(`Successfully loaded ${loadedExpenses.length} expenses!`, 'success');
                     // Update quick selection buttons with new data
                     this.updateQuickSelectionButtons();
@@ -1232,22 +1233,30 @@ class ExpenseTracker {
     }
 
     // Parse CSV content
-    parseCSV(content) {
-        const lines = content.trim().split('\n');
-        if (lines.length < 2) return [];
+    parseCSV(content, fileName = '') {
+        const normalizedContent = this.normalizeImportedContent(content);
+        const lines = normalizedContent.split('\n').map(line => line.trim()).filter(Boolean);
+        if (lines.length === 0) return [];
+
+        const headerFields = this.parseCSVLine(lines[0]);
+        const hasHeader = this.isImportHeader(headerFields);
+        const columnMap = hasHeader ? this.buildImportColumnMap(headerFields) : this.getDefaultImportColumnMap();
+        const importOptions = {
+            fallbackYear: this.inferImportYear(fileName),
+            defaultLabel: 'MISCELLANEOUS',
+            defaultPaymentOption: 'CASH'
+        };
 
         const expenses = [];
-        // Skip header row
-        for (let i = 1; i < lines.length; i++) {
-            const line = lines[i].trim();
-            if (!line) continue;
+        const startIndex = hasHeader ? 1 : 0;
+
+        for (let i = startIndex; i < lines.length; i++) {
+            const line = lines[i];
 
             // Parse CSV line (handling quoted fields)
             const fields = this.parseCSVLine(line);
-            if (fields.length >= 5) {
-                const expense = this.createExpenseFromFields(fields);
-                if (expense) expenses.push(expense);
-            }
+            const expense = this.createExpenseFromFields(fields, columnMap, importOptions);
+            if (expense) expenses.push(expense);
         }
 
         return expenses;
@@ -1277,17 +1286,18 @@ class ExpenseTracker {
     }
 
     // Parse TXT content
-    parseTXT(content) {
+    parseTXT(content, fileName = '') {
+        const normalizedContent = this.normalizeImportedContent(content);
         // First, check if this TXT file is actually in CSV format
-        const lines = content.trim().split('\n');
+        const lines = normalizedContent.split('\n').map(line => line.trim()).filter(Boolean);
         if (lines.length >= 2) {
-            const firstLine = lines[0].trim();
+            const firstLine = lines[0];
             // Check if first line looks like CSV header
             if (firstLine.toLowerCase().includes('date') && firstLine.includes(',') && 
                 (firstLine.toLowerCase().includes('amount') || firstLine.toLowerCase().includes('description'))) {
                 // This TXT file is actually in CSV format, use CSV parser
                 console.log('TXT file detected as CSV format, using CSV parser');
-                return this.parseCSV(content);
+                return this.parseCSV(normalizedContent, fileName);
             }
         }
 
@@ -1352,12 +1362,29 @@ class ExpenseTracker {
     }
 
     // Create expense object from CSV fields
-    createExpenseFromFields(fields) {
+    createExpenseFromFields(fields, columnMap = this.getDefaultImportColumnMap(), importOptions = {}) {
         try {
-            const [dateStr, amountStr, description, label, paymentOption] = fields;
+            const getField = (fieldName) => {
+                const fieldIndex = columnMap[fieldName];
+                if (fieldIndex === undefined || fieldIndex >= fields.length) {
+                    return '';
+                }
+
+                return fields[fieldIndex].trim();
+            };
+
+            const dateStr = getField('date');
+            const amountStr = getField('amount');
+            const description = getField('description');
+            const label = getField('label') || importOptions.defaultLabel || 'MISCELLANEOUS';
+            const paymentOption = getField('paymentOption') || importOptions.defaultPaymentOption || 'CASH';
+
+            if (!dateStr || !amountStr || !description) {
+                return null;
+            }
             
             // Parse date (try different formats)
-            const date = this.parseDate(dateStr.trim());
+            const date = this.parseDate(dateStr, importOptions.fallbackYear);
             if (!date) return null;
 
             // Parse amount
@@ -1404,9 +1431,11 @@ class ExpenseTracker {
     }
 
     // Parse date from various formats
-    parseDate(dateStr) {
+    parseDate(dateStr, fallbackYear = this.currentMonth.getFullYear()) {
+        const normalizedDate = dateStr.replace(/^\uFEFF/, '').trim();
+
         // Try dd-MMM-YYYY format first (02-Oct-2025) - this is the expected format for CSV
-        const ddMmmYyyy = dateStr.match(/^(\d{1,2})-([A-Za-z]{3})-(\d{4})$/);
+        const ddMmmYyyy = normalizedDate.match(/^(\d{1,2})-([A-Za-z]{3})-(\d{4})$/);
         if (ddMmmYyyy) {
             const [, day, month, year] = ddMmmYyyy;
             const monthNames = ['jan', 'feb', 'mar', 'apr', 'may', 'jun',
@@ -1420,16 +1449,112 @@ class ExpenseTracker {
             }
         }
 
+        // Support compact imports that omit the year (e.g. 01-Jan)
+        const ddMmm = normalizedDate.match(/^(\d{1,2})-([A-Za-z]{3})$/);
+        if (ddMmm && fallbackYear) {
+            const [, day, month] = ddMmm;
+            const monthNames = ['jan', 'feb', 'mar', 'apr', 'may', 'jun',
+                              'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
+            const monthIndex = monthNames.indexOf(month.toLowerCase());
+            if (monthIndex !== -1) {
+                const paddedMonth = (monthIndex + 1).toString().padStart(2, '0');
+                const paddedDay = day.padStart(2, '0');
+                return `${fallbackYear}-${paddedMonth}-${paddedDay}`;
+            }
+        }
+
         // Try ISO format (YYYY-MM-DD) - just validate and return as is
-        const isoFormat = dateStr.match(/^\d{4}-\d{2}-\d{2}$/);
+        const isoFormat = normalizedDate.match(/^\d{4}-\d{2}-\d{2}$/);
         if (isoFormat) {
-            const date = new Date(dateStr + 'T12:00:00Z'); // Use noon UTC to avoid timezone issues
+            const date = new Date(normalizedDate + 'T12:00:00Z'); // Use noon UTC to avoid timezone issues
             if (!isNaN(date.getTime())) {
-                return dateStr; // Return original ISO format
+                return normalizedDate; // Return original ISO format
             }
         }
 
         return null;
+    }
+
+    normalizeImportedContent(content) {
+        return content
+            .replace(/^\uFEFF/, '')
+            .replace(/\u0000/g, '')
+            .replace(/\r\n/g, '\n')
+            .replace(/\r/g, '\n')
+            .trim();
+    }
+
+    isImportHeader(fields) {
+        if (fields.length < 3) {
+            return false;
+        }
+
+        const normalizedFields = fields.map(field => field.trim().toLowerCase());
+        return normalizedFields.includes('date') &&
+            normalizedFields.includes('amount') &&
+            normalizedFields.includes('description');
+    }
+
+    buildImportColumnMap(headerFields) {
+        const columnMap = {};
+
+        headerFields.forEach((field, index) => {
+            const normalizedField = field.trim().toLowerCase().replace(/\s+/g, '');
+
+            if (normalizedField === 'date') {
+                columnMap.date = index;
+            } else if (normalizedField === 'amount') {
+                columnMap.amount = index;
+            } else if (normalizedField === 'description') {
+                columnMap.description = index;
+            } else if (normalizedField === 'label') {
+                columnMap.label = index;
+            } else if (normalizedField === 'paymentoption' || normalizedField === 'payment') {
+                columnMap.paymentOption = index;
+            }
+        });
+
+        return {
+            ...this.getDefaultImportColumnMap(),
+            ...columnMap
+        };
+    }
+
+    getDefaultImportColumnMap() {
+        return {
+            date: 0,
+            amount: 1,
+            description: 2,
+            label: 3,
+            paymentOption: 4
+        };
+    }
+
+    inferImportYear(fileName = '') {
+        const yearMatch = fileName.match(/(?:19|20)\d{2}/);
+        if (yearMatch) {
+            return parseInt(yearMatch[0], 10);
+        }
+
+        return this.currentMonth.getFullYear();
+    }
+
+    focusImportedMonth(loadedExpenses) {
+        if (loadedExpenses.length === 0) {
+            return;
+        }
+
+        const importedMonths = [...new Set(loadedExpenses.map(expense => expense.date.slice(0, 7)))];
+        if (importedMonths.length !== 1) {
+            this.loadCurrentMonthExpenses();
+            this.displayExpenses();
+            return;
+        }
+
+        this.currentMonth = new Date(`${importedMonths[0]}-01T12:00:00`);
+        this.updateDisplayMonth();
+        this.loadCurrentMonthExpenses();
+        this.displayExpenses();
     }
 
     // Merge loaded expenses with existing ones
